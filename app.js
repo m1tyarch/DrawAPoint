@@ -10,7 +10,7 @@
   const STORAGE_KEY = 'drawapoint_state_v1';
   const LEGACY_STORAGE_KEY = 'infinite_canvas_state_v1';
   const MIN_SCALE = 0.05; // 5%
-  const MAX_SCALE = 20.0; // 2000%
+  const MAX_SCALE = 2.0; // 200%
   const BASE_GRID_STEP = 36;
 
   // --- Состояние приложения ---
@@ -404,6 +404,8 @@
   function updateZoomUI() {
     const percent = Math.round(state.scale * 100);
     zoomPercentage.textContent = percent + '%';
+    if (btnZoomIn) btnZoomIn.disabled = state.scale >= MAX_SCALE - 0.001;
+    if (btnZoomOut) btnZoomOut.disabled = state.scale <= MIN_SCALE + 0.001;
   }
 
   // Center and fit drawing to view
@@ -980,7 +982,7 @@
       if (data.camera) {
         state.panX = data.camera.panX || window.innerWidth / 2;
         state.panY = data.camera.panY || window.innerHeight / 2;
-        state.scale = data.camera.scale || 1.0;
+        state.scale = Math.min(Math.max(data.camera.scale || 1.0, MIN_SCALE), MAX_SCALE);
         updateZoomUI();
       }
 

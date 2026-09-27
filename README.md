@@ -8,7 +8,7 @@ A minimalist, fast, and responsive infinite canvas drawing application for the b
 
 - **Infinite Canvas**:
   - Smooth pan in any direction.
-  - Logarithmic zoom from 5% to 2000% centered on cursor or touch midpoint.
+  - Logarithmic zoom from 5% to 200% centered on cursor or touch midpoint.
   - Touch support: pinch-to-zoom and two-finger panning.
 - **Drawing Tools**:
   - **Pen** (smooth ink strokes with quadratic Bézier curves).
