@@ -107,23 +107,27 @@
 
   function resizeCanvas() {
     dpr = window.devicePixelRatio || 1;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const w = Math.max(window.innerWidth, document.documentElement.clientWidth || 0);
+    const h = Math.max(window.innerHeight, document.documentElement.clientHeight || 0);
 
     mainCanvas.width = Math.round(w * dpr);
     mainCanvas.height = Math.round(h * dpr);
     activeCanvas.width = Math.round(w * dpr);
     activeCanvas.height = Math.round(h * dpr);
 
-    mainCanvas.style.width = w + 'px';
-    mainCanvas.style.height = h + 'px';
-    activeCanvas.style.width = w + 'px';
-    activeCanvas.style.height = h + 'px';
+    mainCanvas.style.width = '100%';
+    mainCanvas.style.height = '100%';
+    activeCanvas.style.width = '100%';
+    activeCanvas.style.height = '100%';
 
     redrawMainCanvas();
   }
 
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', resizeCanvas);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resizeCanvas);
+  }
 
   // --- Отрисовка сетки и фона ---
   function renderGrid(ctx, w, h) {
@@ -877,24 +881,20 @@
   // Color theme
   function setTheme(newTheme) {
     state.theme = newTheme;
-    document.body.classList.toggle('theme-dark', newTheme === 'dark');
+    const isDark = newTheme === 'dark';
+    document.documentElement.classList.toggle('theme-dark', isDark);
+    document.documentElement.classList.toggle('theme-light', !isDark);
+    document.body.classList.toggle('theme-dark', isDark);
+    document.body.classList.toggle('theme-light', !isDark);
+
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', isDark ? '#121316' : '#f8fafc');
+    }
 
     const themeLabel = document.querySelector('.theme-text');
     if (themeLabel) {
-      themeLabel.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
-    }
-
-    const firstSwatch = colorSwatches[0];
-    if (firstSwatch) {
-      const defaultColor = newTheme === 'dark' ? '#f4f4f5' : '#18181b';
-      firstSwatch.dataset.color = defaultColor;
-      firstSwatch.style.setProperty('--swatch-color', defaultColor);
-      firstSwatch.title = newTheme === 'dark' ? 'White' : 'Black';
-      firstSwatch.setAttribute('aria-label', firstSwatch.title);
-
-      if (state.color === '#f4f4f5' || state.color === '#18181b') {
-        selectColor(defaultColor);
-      }
+      themeLabel.textContent = isDark ? 'Dark' : 'Light';
     }
 
     scheduleRedraw();
