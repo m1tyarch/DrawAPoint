@@ -29,15 +29,6 @@
         </svg>
       </button>
 
-      <button type="button" class="tool-btn" data-tool="marker" title="Highlighter / Marker (M)" aria-label="Marker (M)" aria-pressed="false">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"/>
-          <path d="M15 13 9 7l4-4 6 6-4 4Z"/>
-          <path d="m18 22 4-4"/>
-          <path d="m2 22 2-2"/>
-        </svg>
-      </button>
-
       <button type="button" class="tool-btn" data-tool="eraser" title="Eraser (E) — delete strokes" aria-label="Eraser (E)" aria-pressed="false">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
@@ -58,16 +49,10 @@
 
     <div class="toolbar-divider" role="separator"></div>
 
-    <!-- Color palette -->
+    <!-- Color selection: default white and custom picker -->
     <div class="toolbar-group color-group">
       <div class="color-palette" id="color-palette">
-        <button type="button" class="color-swatch active" data-color="#f4f4f5" title="White" aria-label="White color" style="--swatch-color: #f4f4f5;"></button>
-        <button type="button" class="color-swatch" data-color="#f87171" title="Red" aria-label="Red color" style="--swatch-color: #f87171;"></button>
-        <button type="button" class="color-swatch" data-color="#fbbf24" title="Yellow" aria-label="Yellow color" style="--swatch-color: #fbbf24;"></button>
-        <button type="button" class="color-swatch" data-color="#34d399" title="Green" aria-label="Green color" style="--swatch-color: #34d399;"></button>
-        <button type="button" class="color-swatch" data-color="#60a5fa" title="Blue" aria-label="Blue color" style="--swatch-color: #60a5fa;"></button>
-        <button type="button" class="color-swatch" data-color="#a78bfa" title="Purple" aria-label="Purple color" style="--swatch-color: #a78bfa;"></button>
-        <button type="button" class="color-swatch" data-color="#f472b6" title="Pink" aria-label="Pink color" style="--swatch-color: #f472b6;"></button>
+        <button type="button" class="color-swatch active" data-color="#ffffff" title="White" aria-label="White color" style="--swatch-color: #ffffff;"></button>
       </div>
 
       <div class="custom-color-wrapper" title="Pick custom color">
@@ -77,7 +62,7 @@
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
         </label>
-        <input type="color" id="custom-color-input" value="#f4f4f5" tabindex="-1">
+        <input type="color" id="custom-color-input" value="#ffffff" tabindex="-1">
       </div>
     </div>
 
@@ -143,29 +128,6 @@
   <!-- Dropdown menu -->
   <div id="dropdown-menu" class="dropdown-menu hidden" role="menu" aria-label="Canvas Menu">
     <div class="menu-section">
-      <div class="menu-title">Export</div>
-      <button type="button" class="menu-item" id="menu-export-png" role="menuitem">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-        <span>Export as PNG</span>
-      </button>
-      <button type="button" class="menu-item" id="menu-export-svg" role="menuitem">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        <span>Export as SVG (Vector)</span>
-      </button>
-      <button type="button" class="menu-item" id="menu-save-json" role="menuitem">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Save Project File (.json)</span>
-      </button>
-      <button type="button" class="menu-item" id="menu-load-json" role="menuitem">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span>Load Project (.json)</span>
-      </button>
-      <input type="file" id="file-input-json" accept=".json" class="hidden">
-    </div>
-
-    <div class="menu-divider"></div>
-
-    <div class="menu-section">
       <div class="menu-title">Appearance</div>
       <div class="menu-row">
         <span>Grid Style</span>
@@ -184,6 +146,16 @@
         </button>
       </div>
     </div>
+
+    <div class="menu-divider"></div>
+
+    <div class="menu-section">
+      <button type="button" class="menu-item" id="menu-shortcuts" role="menuitem">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Keyboard Shortcuts (?)</span>
+      </button>
+    </div>
+  </div>
 
     <div class="menu-divider"></div>
 
@@ -256,10 +228,6 @@
           <div class="shortcut-row">
             <span class="shortcut-label">Pen Tool</span>
             <span class="kbd-combo"><kbd>B</kbd> or <kbd>P</kbd></span>
-          </div>
-          <div class="shortcut-row">
-            <span class="shortcut-label">Marker Tool</span>
-            <span class="kbd-combo"><kbd>M</kbd></span>
           </div>
           <div class="shortcut-row">
             <span class="shortcut-label">Eraser Tool</span>

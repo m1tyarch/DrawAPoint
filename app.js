@@ -19,9 +19,9 @@
     panY: window.innerHeight / 2,
     scale: 1.0,
 
-    // Текущий инструмент
-    activeTool: 'pen', // 'pen' | 'marker' | 'eraser' | 'hand'
-    color: '#f4f4f5',
+    // Active tool
+    activeTool: 'pen', // 'pen' | 'eraser' | 'hand'
+    color: '#ffffff',
     size: 5,
     gridType: 'dots', // 'dots' | 'lines' | 'none'
     theme: 'dark', // 'dark' | 'light'
@@ -74,11 +74,6 @@
   const btnToggleUi = document.getElementById('btn-toggle-ui');
   const gridSelectors = document.querySelectorAll('#grid-selector .pill-opt');
   const btnThemeToggle = document.getElementById('btn-theme-toggle');
-  const menuExportPng = document.getElementById('menu-export-png');
-  const menuExportSvg = document.getElementById('menu-export-svg');
-  const menuSaveJson = document.getElementById('menu-save-json');
-  const menuLoadJson = document.getElementById('menu-load-json');
-  const fileInputJson = document.getElementById('file-input-json');
   const menuShortcuts = document.getElementById('menu-shortcuts');
   const modalShortcuts = document.getElementById('modal-shortcuts');
   const btnCloseShortcuts = document.getElementById('btn-close-shortcuts');
@@ -183,7 +178,7 @@
     }
   }
 
-  // --- Отрисовка отдельного штриха ---
+  // --- Draw individual stroke ---
   function renderStroke(ctx, stroke) {
     const pts = stroke.points;
     if (!pts || pts.length === 0) return;
@@ -191,20 +186,11 @@
     ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-
-    if (stroke.tool === 'marker') {
-      ctx.globalAlpha = 0.35;
-      ctx.strokeStyle = stroke.color;
-      ctx.fillStyle = stroke.color;
-      ctx.lineWidth = stroke.size * 2.8;
-      ctx.globalCompositeOperation = state.theme === 'dark' ? 'screen' : 'multiply';
-    } else {
-      ctx.globalAlpha = 1.0;
-      ctx.strokeStyle = stroke.color;
-      ctx.fillStyle = stroke.color;
-      ctx.lineWidth = stroke.size;
-      ctx.globalCompositeOperation = 'source-over';
-    }
+    ctx.globalAlpha = 1.0;
+    ctx.strokeStyle = stroke.color;
+    ctx.fillStyle = stroke.color;
+    ctx.lineWidth = stroke.size;
+    ctx.globalCompositeOperation = 'source-over';
 
     if (pts.length === 1) {
       ctx.beginPath();
@@ -953,204 +939,6 @@
   btnUndo.addEventListener('click', undo);
   btnRedo.addEventListener('click', redo);
 
-  // --- Export features ---
-
-  // Export as PNG
-  menuExportPng.addEventListener('click', () => {
-    toggleDropdownMenu(false);
-    exportCanvasToPng();
-  });
-
-  function exportCanvasToPng() {
-    if (state.strokes.length === 0) {
-      showToast('Canvas is empty, nothing to export');
-      return;
-    }
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const s of state.strokes) {
-      if (!s.bbox) continue;
-      const pad = (s.size || 5) * 2;
-      if (s.bbox.minX - pad < minX) minX = s.bbox.minX - pad;
-      if (s.bbox.minY - pad < minY) minY = s.bbox.minY - pad;
-      if (s.bbox.maxX + pad > maxX) maxX = s.bbox.maxX + pad;
-      if (s.bbox.maxY + pad > maxY) maxY = s.bbox.maxY + pad;
-    }
-
-    const padding = 40;
-    const width = Math.max(100, Math.ceil(maxX - minX + padding * 2));
-    const height = Math.max(100, Math.ceil(maxY - minY + padding * 2));
-
-    const offscreen = document.createElement('canvas');
-    offscreen.width = width;
-    offscreen.height = height;
-    const offCtx = offscreen.getContext('2d');
-
-    offCtx.fillStyle = state.theme === 'dark' ? '#121316' : '#ffffff';
-    offCtx.fillRect(0, 0, width, height);
-    offCtx.translate(-minX + padding, -minY + padding);
-
-    for (const s of state.strokes) {
-      renderStroke(offCtx, s);
-    }
-
-    offscreen.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `canvas_${new Date().toISOString().slice(0, 10)}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('PNG image saved');
-    }, 'image/png');
-  }
-
-  // Export as SVG
-  menuExportSvg.addEventListener('click', () => {
-    toggleDropdownMenu(false);
-    exportCanvasToSvg();
-  });
-
-  function exportCanvasToSvg() {
-    if (state.strokes.length === 0) {
-      showToast('Canvas is empty, nothing to export');
-      return;
-    }
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const s of state.strokes) {
-      if (!s.bbox) continue;
-      const pad = (s.size || 5) * 2;
-      if (s.bbox.minX - pad < minX) minX = s.bbox.minX - pad;
-      if (s.bbox.minY - pad < minY) minY = s.bbox.minY - pad;
-      if (s.bbox.maxX + pad > maxX) maxX = s.bbox.maxX + pad;
-      if (s.bbox.maxY + pad > maxY) maxY = s.bbox.maxY + pad;
-    }
-
-    const padding = 40;
-    const width = Math.max(100, Math.ceil(maxX - minX + padding * 2));
-    const height = Math.max(100, Math.ceil(maxY - minY + padding * 2));
-    const viewBoxX = minX - padding;
-    const viewBoxY = minY - padding;
-
-    const bgColor = state.theme === 'dark' ? '#121316' : '#ffffff';
-    let pathsHtml = `<rect x="${viewBoxX}" y="${viewBoxY}" width="${width}" height="${height}" fill="${bgColor}" />\n`;
-
-    for (const stroke of state.strokes) {
-      const pts = stroke.points;
-      if (!pts || pts.length === 0) continue;
-
-      const isMarker = stroke.tool === 'marker';
-      const strokeWidth = isMarker ? stroke.size * 2.8 : stroke.size;
-      const opacity = isMarker ? 0.4 : 1.0;
-
-      if (pts.length === 1) {
-        pathsHtml += `  <circle cx="${pts[0].x}" cy="${pts[0].y}" r="${strokeWidth / 2}" fill="${stroke.color}" opacity="${opacity}" />\n`;
-        continue;
-      }
-
-      let d = `M ${pts[0].x} ${pts[0].y}`;
-      for (let i = 1; i < pts.length - 1; i++) {
-        const xc = (pts[i].x + pts[i + 1].x) / 2;
-        const yc = (pts[i].y + pts[i + 1].y) / 2;
-        d += ` Q ${pts[i].x} ${pts[i].y} ${xc} ${yc}`;
-      }
-      const last = pts[pts.length - 1];
-      d += ` L ${last.x} ${last.y}`;
-
-      pathsHtml += `  <path d="${d}" fill="none" stroke="${stroke.color}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}" />\n`;
-    }
-
-    const svgContent = `<?xml version="1.0" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBoxX} ${viewBoxY} ${width} ${height}" width="${width}" height="${height}">
-${pathsHtml}
-</svg>`;
-
-    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `canvas_${new Date().toISOString().slice(0, 10)}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Vector SVG file saved');
-  }
-
-  // Save JSON
-  menuSaveJson.addEventListener('click', () => {
-    toggleDropdownMenu(false);
-    const projectData = {
-      version: 1,
-      timestamp: Date.now(),
-      theme: state.theme,
-      gridType: state.gridType,
-      camera: { panX: state.panX, panY: state.panY, scale: state.scale },
-      strokes: state.strokes,
-    };
-
-    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `canvas_project_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Project JSON file saved');
-  });
-
-  // Load JSON
-  menuLoadJson.addEventListener('click', () => {
-    toggleDropdownMenu(false);
-    fileInputJson.click();
-  });
-
-  fileInputJson.addEventListener('change', (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target.result);
-        if (data && Array.isArray(data.strokes)) {
-          state.strokes = data.strokes;
-          state.history = [];
-          state.redoStack = [];
-
-          if (data.camera) {
-            state.panX = data.camera.panX || state.panX;
-            state.panY = data.camera.panY || state.panY;
-            state.scale = data.camera.scale || state.scale;
-          }
-
-          if (data.theme) {
-            setTheme(data.theme);
-          }
-
-          if (data.gridType) {
-            state.gridType = data.gridType;
-            gridSelectors.forEach(btn => {
-              btn.classList.toggle('active', btn.dataset.grid === data.gridType);
-            });
-          }
-
-          updateZoomUI();
-          updateHistoryButtons();
-          scheduleRedraw();
-          debouncedSave();
-          showToast('Project loaded successfully');
-        } else {
-          showToast('Invalid project file format');
-        }
-      } catch (err) {
-        showToast('Error reading file');
-      }
-    };
-    reader.readAsText(file);
-    fileInputJson.value = '';
-  });
-
   // --- Автосохранение (LocalStorage) ---
   let saveTimer = null;
   function debouncedSave() {
@@ -1290,13 +1078,9 @@ ${pathsHtml}
       return;
     }
 
-    // Инструменты
+    // Tools
     if (e.code === 'KeyB' || e.code === 'KeyP') {
       selectTool('pen');
-      return;
-    }
-    if (e.code === 'KeyM') {
-      selectTool('marker');
       return;
     }
     if (e.code === 'KeyE') {

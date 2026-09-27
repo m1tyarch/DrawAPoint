@@ -12,18 +12,14 @@ A minimalist, fast, and responsive infinite canvas drawing application for the b
   - Touch support: pinch-to-zoom and two-finger panning.
 - **Drawing Tools**:
   - **Pen** (smooth ink strokes with quadratic Bézier curves).
-  - **Marker / Highlighter** (semi-transparent broad strokes).
   - **Eraser** (vector stroke eraser).
   - **Hand** (pan tool).
+  - **Colors**: White by default, with custom color picker.
 - **Grid & Themes**:
   - Infinite dynamic background: **Dots**, **Grid lines**, or **None**.
   - **Dark** and **Light** themes.
-- **History**:
+- **History & Persistence**:
   - Undo and Redo via buttons and shortcuts (`Ctrl+Z` / `Ctrl+Y`).
-- **Export & Storage**:
-  - Export to **PNG** (auto-cropped to drawing bounding box).
-  - Export to **SVG** (clean vector format).
-  - Save and load project as **JSON**.
   - Auto-save to `localStorage`.
 - **Zen Mode**:
   - Toggle UI visibility with `F` key for distraction-free drawing.
@@ -40,7 +36,6 @@ A minimalist, fast, and responsive infinite canvas drawing application for the b
 | **Reset Zoom (100%)** | Click zoom percentage | `0` |
 | **Fit to Content** | Fit button | `Shift` + `1` |
 | **Pen Tool** | Toolbar button | `B` or `P` |
-| **Marker Tool** | Toolbar button | `M` |
 | **Eraser Tool** | Toolbar button | `E` |
 | **Undo** | Toolbar button | `Ctrl` + `Z` |
 | **Redo** | Toolbar button | `Ctrl` + `Y` / `Ctrl` + `Shift` + `Z` |
