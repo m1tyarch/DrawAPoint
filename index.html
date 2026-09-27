@@ -157,16 +157,6 @@
     </div>
   </div>
 
-    <div class="menu-divider"></div>
-
-    <div class="menu-section">
-      <button type="button" class="menu-item" id="menu-shortcuts" role="menuitem">
-        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>Keyboard Shortcuts (?)</span>
-      </button>
-    </div>
-  </div>
-
   <!-- Zoom and navigation widget (bottom-left) -->
   <nav class="zoom-widget" aria-label="Zoom and Navigation">
     <button type="button" class="zoom-btn" id="btn-zoom-out" title="Zoom out (Ctrl + -)" aria-label="Zoom out">
@@ -174,7 +164,9 @@
     </button>
     
     <button type="button" class="zoom-value-btn" id="btn-zoom-reset" title="Reset zoom to 100% (Key 0)" aria-label="Reset zoom to 100%">
-      <span id="zoom-percentage">100%</span>
+      <span id="zoom-percentage" class="zoom-percentage">
+        <span id="zoom-ticker" class="zoom-ticker" aria-hidden="true"></span><span class="zoom-unit" aria-hidden="true">%</span>
+      </span>
     </button>
 
     <button type="button" class="zoom-btn" id="btn-zoom-in" title="Zoom in (Ctrl + +)" aria-label="Zoom in">

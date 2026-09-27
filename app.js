@@ -68,6 +68,7 @@
   const btnMenuToggle = document.getElementById('btn-menu-toggle');
   const dropdownMenu = document.getElementById('dropdown-menu');
   const zoomPercentage = document.getElementById('zoom-percentage');
+  const zoomTicker = document.getElementById('zoom-ticker');
   const btnZoomIn = document.getElementById('btn-zoom-in');
   const btnZoomOut = document.getElementById('btn-zoom-out');
   const btnZoomReset = document.getElementById('btn-zoom-reset');
@@ -401,11 +402,136 @@
     debouncedSave();
   }
 
-  function updateZoomUI() {
+  // --- Rolling odometer zoom ticker ---
+  let previousZoomPercent = null;
+
+  function initZoomTicker() {
+    if (!zoomTicker) return;
+    zoomTicker.innerHTML = '';
+    // Place 2 (hundreds), Place 1 (tens), Place 0 (ones)
+    for (let place = 2; place >= 0; place--) {
+      const col = document.createElement('span');
+      col.className = 'ticker-col is-empty';
+      col.setAttribute('data-place', place);
+      col._currentDigit = '';
+      zoomTicker.appendChild(col);
+    }
+  }
+
+  function setColumnDigit(col, targetDigit, direction, animate) {
+    if (col._currentDigit === targetDigit && !col.querySelector('.ticker-outgoing')) {
+      return;
+    }
+
+    // Immediately remove any outgoing elements from previous transitions
+    const outgoings = col.querySelectorAll('.ticker-outgoing');
+    outgoings.forEach(el => el.remove());
+
+    const activeEl = col.querySelector('.ticker-digit:not(.ticker-outgoing)');
+
+    if (!animate) {
+      if (activeEl) activeEl.remove();
+      col._currentDigit = targetDigit;
+      if (targetDigit === '') {
+        col.classList.add('is-empty');
+      } else {
+        col.classList.remove('is-empty');
+        const span = document.createElement('span');
+        span.className = 'ticker-digit pos-current';
+        span.textContent = targetDigit;
+        col.appendChild(span);
+      }
+      return;
+    }
+
+    // Animating transition
+    if (targetDigit === '') {
+      col.classList.add('is-empty');
+      if (activeEl) {
+        activeEl.classList.add('ticker-outgoing');
+        activeEl.classList.remove('pos-current');
+        // When decreasing, outgoing digit moves upward; when increasing, downward
+        activeEl.classList.add(direction === 'up' ? 'pos-below' : 'pos-above');
+        const oldEl = activeEl;
+        setTimeout(() => {
+          if (oldEl.parentNode === col && oldEl.classList.contains('ticker-outgoing')) {
+            oldEl.remove();
+          }
+        }, 200);
+      }
+      col._currentDigit = '';
+      return;
+    }
+
+    col.classList.remove('is-empty');
+
+    if (activeEl) {
+      activeEl.classList.add('ticker-outgoing');
+      activeEl.classList.remove('pos-current');
+      activeEl.classList.add(direction === 'up' ? 'pos-below' : 'pos-above');
+      const oldEl = activeEl;
+      setTimeout(() => {
+        if (oldEl.parentNode === col && oldEl.classList.contains('ticker-outgoing')) {
+          oldEl.remove();
+        }
+      }, 200);
+    }
+
+    const incomingEl = document.createElement('span');
+    incomingEl.className = 'ticker-digit ' + (direction === 'up' ? 'pos-above' : 'pos-below');
+    incomingEl.textContent = targetDigit;
+    col.appendChild(incomingEl);
+
+    // Force layout reflow so the initial translate position is applied before transitioning
+    void incomingEl.offsetWidth;
+
+    incomingEl.className = 'ticker-digit pos-current';
+    col._currentDigit = targetDigit;
+  }
+
+  function renderZoomTicker(percent, direction, animate = true) {
+    if (!zoomTicker) {
+      if (zoomPercentage) zoomPercentage.textContent = percent + '%';
+      return;
+    }
+
+    if (!zoomTicker.firstElementChild) {
+      initZoomTicker();
+    }
+
+    const str = String(percent);
+    const cols = zoomTicker.querySelectorAll('.ticker-col');
+    cols.forEach(col => {
+      const place = parseInt(col.getAttribute('data-place'), 10);
+      const charIndex = str.length - 1 - place;
+      const digit = (charIndex >= 0 && charIndex < str.length) ? str[charIndex] : '';
+      setColumnDigit(col, digit, direction, animate);
+    });
+
+    if (zoomPercentage) {
+      zoomPercentage.setAttribute('aria-label', percent + '%');
+    }
+  }
+
+  function updateZoomUI(animate = true) {
     const percent = Math.round(state.scale * 100);
-    zoomPercentage.textContent = percent + '%';
+
     if (btnZoomIn) btnZoomIn.disabled = state.scale >= MAX_SCALE - 0.001;
     if (btnZoomOut) btnZoomOut.disabled = state.scale <= MIN_SCALE + 0.001;
+
+    if (previousZoomPercent === null) {
+      renderZoomTicker(percent, 'up', false);
+      previousZoomPercent = percent;
+      return;
+    }
+
+    if (percent === previousZoomPercent) {
+      return;
+    }
+
+    const direction = percent > previousZoomPercent ? 'up' : 'down';
+    renderZoomTicker(percent, direction, animate);
+    previousZoomPercent = percent;
   }
 
   // Center and fit drawing to view

@@ -549,7 +549,11 @@ body.ui-hidden .zoom-widget {
 
 .zoom-value-btn {
   padding: 0 8px;
+  min-width: 52px;
   height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-btn);
   font-size: 12px;
   font-weight: 600;
@@ -559,6 +563,85 @@ body.ui-hidden .zoom-widget {
 
 .zoom-value-btn:hover {
   background-color: var(--surface-hover);
+}
+
+.zoom-percentage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.zoom-ticker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 1.35em;
+  line-height: 1.35em;
+  overflow: hidden;
+  position: relative;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ticker-col {
+  display: inline-block;
+  position: relative;
+  width: 1ch;
+  height: 1.35em;
+  line-height: 1.35em;
+  overflow: hidden;
+  text-align: center;
+  vertical-align: middle;
+  transition: width 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease;
+}
+
+.ticker-col.is-empty {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ticker-digit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  will-change: transform, opacity;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ticker-digit.pos-current {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.ticker-digit.pos-above {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.ticker-digit.pos-below {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.zoom-unit {
+  display: inline-block;
+  margin-left: 1px;
+  line-height: 1.35em;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-digit,
+  .ticker-col {
+    transition: none !important;
+  }
 }
 
 .zoom-divider {
