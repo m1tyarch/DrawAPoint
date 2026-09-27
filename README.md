@@ -1,109 +1,54 @@
-# 🎨 Бесконечный Холст (Infinite Canvas)
+# 🎨 Infinite Canvas
 
-Минималистичный, быстрый и отзывчивый сайт с бесконечным холстом для рисования в браузере. Без внешних зависимостей, библиотек и сборщиков — работает сразу «из коробки» и готов к публикации на **GitHub Pages**.
-
----
-
-## ✨ Возможности
-
-- **Бесконечный холст**:
-  - Свободное перемещение во всех направлениях (панорамирование).
-  - Плавное масштабирование от 5% до 2000% с фокусом на курсор или центр пальцев.
-  - Поддержка сенсорных экранов: масштабирование щипком (pinch-to-zoom) и перетаскивание двумя пальцами.
-- **Инструменты рисования**:
-  - **Перо** (плавные штрихи со сглаживанием квадратичными кривыми Безье).
-  - **Маркер / Хайлайтер** (полупрозрачный маркер с режимом наложения).
-  - **Ластик** (умный векторный ластик целых штрихов).
-  - **Рука** (для быстрого панорамирования без горячих клавиш).
-- **Сетка и темы**:
-  - Интерактивная бесконечная сетка: **Точки**, **Клетка** или **Чистый лист**.
-  - **Темная** и **Светлая** темы оформления с автоадаптацией цветов.
-- **Управление историей**:
-  - Полная отмена и повтор действий (**Undo / Redo** через `Ctrl+Z` / `Ctrl+Y`).
-- **Экспорт и сохранение**:
-  - Экспорт рисунка в **PNG** (автоматическая обрезка по границам рисунка).
-  - Экспорт в **SVG** (векторный формат без потери качества).
-  - Сохранение и загрузка всего проекта в **JSON**.
-  - Автосохранение в `localStorage` (рисунок не исчезнет при обновлении страницы).
-- **Режим чистого экрана (Zen Mode)**:
-  - Скрытие всех панелей по нажатию клавиши `F` для максимальной концентрации на творчестве.
+A minimalist, fast, and responsive infinite canvas drawing application for the browser. Built with pure HTML5, CSS3, and JavaScript — zero external dependencies, no build steps required, and ready to deploy on **GitHub Pages**.
 
 ---
 
-## ⌨️ Управление и горячие клавиши
+## ✨ Features
 
-| Действие | Управление мышь / тач | Горячая клавиша |
+- **Infinite Canvas**:
+  - Smooth pan in any direction.
+  - Logarithmic zoom from 5% to 2000% centered on cursor or touch midpoint.
+  - Touch support: pinch-to-zoom and two-finger panning.
+- **Drawing Tools**:
+  - **Pen** (smooth ink strokes with quadratic Bézier curves).
+  - **Marker / Highlighter** (semi-transparent broad strokes).
+  - **Eraser** (vector stroke eraser).
+  - **Hand** (pan tool).
+- **Grid & Themes**:
+  - Infinite dynamic background: **Dots**, **Grid lines**, or **None**.
+  - **Dark** and **Light** themes.
+- **History**:
+  - Undo and Redo via buttons and shortcuts (`Ctrl+Z` / `Ctrl+Y`).
+- **Export & Storage**:
+  - Export to **PNG** (auto-cropped to drawing bounding box).
+  - Export to **SVG** (clean vector format).
+  - Save and load project as **JSON**.
+  - Auto-save to `localStorage`.
+- **Zen Mode**:
+  - Toggle UI visibility with `F` key for distraction-free drawing.
+
+---
+
+## ⌨️ Controls & Shortcuts
+
+| Action | Mouse / Touch | Shortcut |
 | :--- | :--- | :--- |
-| **Рисование** | ЛКМ или касание | — |
-| **Панорамирование** | Зажать `Пробел` + ЛКМ / Клик колесиком / 2 пальца | `H` (рука) |
-| **Масштабирование (Zoom)** | Колесо мыши / Щипок двумя пальцами | `Ctrl` + `+` / `-` |
-| **Сброс масштаба к 100%** | Клик по процентам зума | `0` |
-| **Показать весь рисунок** | Кнопка центрирования | `Shift` + `1` |
-| **Инструмент Перо** | Кнопка на панели | `B` или `P` |
-| **Инструмент Маркер** | Кнопка на панели | `M` |
-| **Инструмент Ластик** | Кнопка на панели | `E` |
-| **Отмена (Undo)** | Кнопка со стрелкой влево | `Ctrl` + `Z` |
-| **Повтор (Redo)** | Кнопка со стрелкой вправо | `Ctrl` + `Y` / `Ctrl` + `Shift` + `Z` |
-| **Скрыть/показать интерфейс** | Кнопка в правом нижнем углу | `F` |
-| **Справка по клавишам** | Пункт в меню `...` | `?` |
+| **Draw** | Left Click / Touch | — |
+| **Pan** | Hold `Space` + Drag / Middle Click / 2 fingers | `H` |
+| **Zoom** | Mouse Wheel / Pinch gesture | `Ctrl` + `+` / `-` |
+| **Reset Zoom (100%)** | Click zoom percentage | `0` |
+| **Fit to Content** | Fit button | `Shift` + `1` |
+| **Pen Tool** | Toolbar button | `B` or `P` |
+| **Marker Tool** | Toolbar button | `M` |
+| **Eraser Tool** | Toolbar button | `E` |
+| **Undo** | Toolbar button | `Ctrl` + `Z` |
+| **Redo** | Toolbar button | `Ctrl` + `Y` / `Ctrl` + `Shift` + `Z` |
+| **Toggle UI** | Bottom-right button | `F` |
+| **Shortcuts Help** | Menu item | `?` |
 
 ---
 
-## 🚀 Как опубликовать на GitHub Pages
+## 🚀 Deployment
 
-### Способ 1: С помощью GitHub CLI (`gh`) — самый быстрый
-
-Выполните следующие команды в папке проекта:
-
-```bash
-cd /home/m1tya/Projects/infinite-canvas
-
-# 1. Инициализация репозитория и коммит файлов
-git init -b main
-git add .
-git commit -m "feat: initial commit for infinite canvas"
-
-# 2. Создание репозитория на GitHub и отправка кода
-gh repo create infinite-canvas --public --source=. --remote=origin --push
-
-# 3. Включение GitHub Pages
-gh repo edit --enable-pages
-```
-
-Сайт будет доступен по адресу:
-`https://m1tyarch.github.io/infinite-canvas/`
-
----
-
-### Способ 2: Вручную через интерфейс GitHub
-
-1. Создайте новый репозиторий на [github.com/new](https://github.com/new) (например, `infinite-canvas`).
-2. Запушьте код:
-   ```bash
-   git init -b main
-   git add .
-   git commit -m "feat: initial commit"
-   git remote add origin https://github.com/<ваш_ник>/infinite-canvas.git
-   git push -u origin main
-   ```
-3. Откройте **Settings** вашего репозитория на GitHub -> вкладка **Pages** (слева).
-4. В разделе **Build and deployment**:
-   - **Source**: выберите `Deploy from a branch` (или `GitHub Actions` — в репозитории уже настроен workflow `.github/workflows/deploy.yml`).
-   - Если выбрали `Deploy from a branch`: выберите ветку `main` и папку `/(root)`, затем нажмите **Save**.
-5. Через 1–2 минуты сайт станет доступен по адресу:
-   `https://<ваш_ник>.github.io/infinite-canvas/`
-
----
-
-## 💻 Локальный запуск для проверки
-
-Поскольку проект написан на чистом HTML, CSS и JavaScript без сборщиков, его можно запустить любой локальной утилитой или просто открыв `index.html` в браузере:
-
-```bash
-# С помощью Python:
-python3 -m http.server 8000 --directory /home/m1tya/Projects/infinite-canvas
-
-# Или с помощью Node / npx:
-npx serve /home/m1tya/Projects/infinite-canvas
-```
-Затем откройте в браузере: `http://localhost:8000`.
+The project is configured with GitHub Actions workflow at `.github/workflows/deploy.yml` for automated deployment to GitHub Pages on every push to `main`.

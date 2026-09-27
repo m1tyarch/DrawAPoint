@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="Бесконечный холст для рисования в браузере. Рисуйте свободно, масштабируйте и перемещайтесь без границ.">
+  <meta name="description" content="Infinite canvas for drawing in the browser. Draw freely, zoom, and pan without boundaries.">
   <meta name="theme-color" content="#121316">
-  <title>Бесконечный Холст | Infinite Canvas</title>
+  <title>Infinite Canvas | Draw</title>
   
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-dark">
-  <!-- Канвасы: основной (для сетки и завершенных штрихов) и активный (для рисования текущего штриха без задержек) -->
+  <!-- Canvases: main (for grid and committed strokes) and active (for drawing current stroke without lag) -->
   <div id="canvas-container" class="canvas-container">
     <canvas id="main-canvas"></canvas>
     <canvas id="active-canvas"></canvas>
   </div>
 
-  <!-- Плавающая верхняя панель инструментов -->
-  <header id="toolbar" class="toolbar-dock" role="toolbar" aria-label="Панель инструментов рисования">
+  <!-- Floating top toolbar -->
+  <header id="toolbar" class="toolbar-dock" role="toolbar" aria-label="Drawing Toolbar">
     <div class="toolbar-group tools-group">
-      <button type="button" class="tool-btn active" data-tool="pen" title="Перо (B)" aria-label="Перо (B)" aria-pressed="true">
+      <button type="button" class="tool-btn active" data-tool="pen" title="Pen (B)" aria-label="Pen (B)" aria-pressed="true">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m12 19 7-7 3 3-7 7-3-3z"/>
           <path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18"/>
@@ -29,7 +29,7 @@
         </svg>
       </button>
 
-      <button type="button" class="tool-btn" data-tool="marker" title="Маркер / Маркер-хайлайтер (M)" aria-label="Маркер (M)" aria-pressed="false">
+      <button type="button" class="tool-btn" data-tool="marker" title="Highlighter / Marker (M)" aria-label="Marker (M)" aria-pressed="false">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m14 12-8.5 8.5a2.12 2.12 0 1 1-3-3L11 9"/>
           <path d="M15 13 9 7l4-4 6 6-4 4Z"/>
@@ -38,7 +38,7 @@
         </svg>
       </button>
 
-      <button type="button" class="tool-btn" data-tool="eraser" title="Ластик (E) — стирает штрихи" aria-label="Ластик (E)" aria-pressed="false">
+      <button type="button" class="tool-btn" data-tool="eraser" title="Eraser (E) — delete strokes" aria-label="Eraser (E)" aria-pressed="false">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/>
           <path d="M22 21H7"/>
@@ -46,7 +46,7 @@
         </svg>
       </button>
 
-      <button type="button" class="tool-btn" data-tool="hand" title="Рука / Панорамирование (H или зажмите Пробел)" aria-label="Панорамирование (H)" aria-pressed="false">
+      <button type="button" class="tool-btn" data-tool="hand" title="Hand / Pan (H or hold Space)" aria-label="Pan (H)" aria-pressed="false">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
           <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/>
@@ -58,21 +58,20 @@
 
     <div class="toolbar-divider" role="separator"></div>
 
-    <!-- Цветовая палитра -->
+    <!-- Color palette -->
     <div class="toolbar-group color-group">
       <div class="color-palette" id="color-palette">
-        <!-- Кнопки палитры генерируются динамически или заданы в HTML -->
-        <button type="button" class="color-swatch active" data-color="#f4f4f5" title="Белый" aria-label="Белый цвет" style="--swatch-color: #f4f4f5;"></button>
-        <button type="button" class="color-swatch" data-color="#f87171" title="Красный" aria-label="Красный цвет" style="--swatch-color: #f87171;"></button>
-        <button type="button" class="color-swatch" data-color="#fbbf24" title="Желтый" aria-label="Желтый цвет" style="--swatch-color: #fbbf24;"></button>
-        <button type="button" class="color-swatch" data-color="#34d399" title="Зеленый" aria-label="Зеленый цвет" style="--swatch-color: #34d399;"></button>
-        <button type="button" class="color-swatch" data-color="#60a5fa" title="Синий" aria-label="Синий цвет" style="--swatch-color: #60a5fa;"></button>
-        <button type="button" class="color-swatch" data-color="#a78bfa" title="Фиолетовый" aria-label="Фиолетовый цвет" style="--swatch-color: #a78bfa;"></button>
-        <button type="button" class="color-swatch" data-color="#f472b6" title="Розовый" aria-label="Розовый цвет" style="--swatch-color: #f472b6;"></button>
+        <button type="button" class="color-swatch active" data-color="#f4f4f5" title="White" aria-label="White color" style="--swatch-color: #f4f4f5;"></button>
+        <button type="button" class="color-swatch" data-color="#f87171" title="Red" aria-label="Red color" style="--swatch-color: #f87171;"></button>
+        <button type="button" class="color-swatch" data-color="#fbbf24" title="Yellow" aria-label="Yellow color" style="--swatch-color: #fbbf24;"></button>
+        <button type="button" class="color-swatch" data-color="#34d399" title="Green" aria-label="Green color" style="--swatch-color: #34d399;"></button>
+        <button type="button" class="color-swatch" data-color="#60a5fa" title="Blue" aria-label="Blue color" style="--swatch-color: #60a5fa;"></button>
+        <button type="button" class="color-swatch" data-color="#a78bfa" title="Purple" aria-label="Purple color" style="--swatch-color: #a78bfa;"></button>
+        <button type="button" class="color-swatch" data-color="#f472b6" title="Pink" aria-label="Pink color" style="--swatch-color: #f472b6;"></button>
       </div>
 
-      <div class="custom-color-wrapper" title="Выбрать свой цвет">
-        <label for="custom-color-input" class="custom-color-label" id="custom-color-preview" aria-label="Выбрать свой цвет">
+      <div class="custom-color-wrapper" title="Pick custom color">
+        <label for="custom-color-input" class="custom-color-label" id="custom-color-preview" aria-label="Pick custom color">
           <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -84,34 +83,34 @@
 
     <div class="toolbar-divider" role="separator"></div>
 
-    <!-- Толщина кисти -->
+    <!-- Brush size -->
     <div class="toolbar-group size-group">
-      <button type="button" class="size-btn" data-size="2" title="Тонкая (2px)" aria-label="Толщина 2 пикселя">
+      <button type="button" class="size-btn" data-size="2" title="Thin (2px)" aria-label="Brush size 2px">
         <span class="dot-preview" style="--dot-size: 3px;"></span>
       </button>
-      <button type="button" class="size-btn active" data-size="5" title="Средняя (5px)" aria-label="Толщина 5 пикселей">
+      <button type="button" class="size-btn active" data-size="5" title="Medium (5px)" aria-label="Brush size 5px">
         <span class="dot-preview" style="--dot-size: 6px;"></span>
       </button>
-      <button type="button" class="size-btn" data-size="12" title="Толстая (12px)" aria-label="Толщина 12 пикселей">
+      <button type="button" class="size-btn" data-size="12" title="Thick (12px)" aria-label="Brush size 12px">
         <span class="dot-preview" style="--dot-size: 11px;"></span>
       </button>
-      <button type="button" class="size-btn" data-size="24" title="Очень толстая (24px)" aria-label="Толщина 24 пикселя">
+      <button type="button" class="size-btn" data-size="24" title="Extra Thick (24px)" aria-label="Brush size 24px">
         <span class="dot-preview" style="--dot-size: 17px;"></span>
       </button>
     </div>
 
     <div class="toolbar-divider" role="separator"></div>
 
-    <!-- История: Undo / Redo -->
+    <!-- History: Undo / Redo -->
     <div class="toolbar-group history-group">
-      <button type="button" class="action-btn" id="btn-undo" title="Отменить (Ctrl+Z)" aria-label="Отменить (Ctrl+Z)" disabled>
+      <button type="button" class="action-btn" id="btn-undo" title="Undo (Ctrl+Z)" aria-label="Undo (Ctrl+Z)" disabled>
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 7v6h6"/>
           <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
         </svg>
       </button>
 
-      <button type="button" class="action-btn" id="btn-redo" title="Повторить (Ctrl+Y / Ctrl+Shift+Z)" aria-label="Повторить (Ctrl+Y)" disabled>
+      <button type="button" class="action-btn" id="btn-redo" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" aria-label="Redo (Ctrl+Y)" disabled>
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 7v6h-6"/>
           <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>
@@ -121,9 +120,9 @@
 
     <div class="toolbar-divider" role="separator"></div>
 
-    <!-- Действия и меню -->
+    <!-- Actions and menu -->
     <div class="toolbar-group actions-group">
-      <button type="button" class="action-btn" id="btn-clear" title="Очистить холст" aria-label="Очистить холст">
+      <button type="button" class="action-btn" id="btn-clear" title="Clear canvas" aria-label="Clear canvas">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 6h18"/>
           <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
@@ -131,7 +130,7 @@
         </svg>
       </button>
 
-      <button type="button" class="action-btn" id="btn-menu-toggle" title="Меню и экспорт" aria-label="Меню настроек и экспорта" aria-expanded="false" aria-haspopup="true">
+      <button type="button" class="action-btn" id="btn-menu-toggle" title="Menu and options" aria-label="Menu and options" aria-expanded="false" aria-haspopup="true">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="1"/>
           <circle cx="12" cy="5" r="1"/>
@@ -141,25 +140,25 @@
     </div>
   </header>
 
-  <!-- Выпадающее меню настроек и экспорта -->
-  <div id="dropdown-menu" class="dropdown-menu hidden" role="menu" aria-label="Меню холста">
+  <!-- Dropdown menu -->
+  <div id="dropdown-menu" class="dropdown-menu hidden" role="menu" aria-label="Canvas Menu">
     <div class="menu-section">
-      <div class="menu-title">Экспорт</div>
+      <div class="menu-title">Export</div>
       <button type="button" class="menu-item" id="menu-export-png" role="menuitem">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-        <span>Экспорт в PNG</span>
+        <span>Export as PNG</span>
       </button>
       <button type="button" class="menu-item" id="menu-export-svg" role="menuitem">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        <span>Экспорт в SVG (вектор)</span>
+        <span>Export as SVG (Vector)</span>
       </button>
       <button type="button" class="menu-item" id="menu-save-json" role="menuitem">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Сохранить файл проекта (.json)</span>
+        <span>Save Project File (.json)</span>
       </button>
       <button type="button" class="menu-item" id="menu-load-json" role="menuitem">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span>Загрузить проект (.json)</span>
+        <span>Load Project (.json)</span>
       </button>
       <input type="file" id="file-input-json" accept=".json" class="hidden">
     </div>
@@ -167,19 +166,19 @@
     <div class="menu-divider"></div>
 
     <div class="menu-section">
-      <div class="menu-title">Оформление</div>
+      <div class="menu-title">Appearance</div>
       <div class="menu-row">
-        <span>Сетка холста</span>
+        <span>Grid Style</span>
         <div class="pill-selector" id="grid-selector">
-          <button type="button" class="pill-opt active" data-grid="dots">Точки</button>
-          <button type="button" class="pill-opt" data-grid="lines">Клетка</button>
-          <button type="button" class="pill-opt" data-grid="none">Нет</button>
+          <button type="button" class="pill-opt active" data-grid="dots">Dots</button>
+          <button type="button" class="pill-opt" data-grid="lines">Grid</button>
+          <button type="button" class="pill-opt" data-grid="none">None</button>
         </div>
       </div>
       <div class="menu-row">
-        <span>Тема оформления</span>
-        <button type="button" class="theme-toggle-btn" id="btn-theme-toggle" aria-label="Переключить тему">
-          <span class="theme-text">Темная</span>
+        <span>Color Theme</span>
+        <button type="button" class="theme-toggle-btn" id="btn-theme-toggle" aria-label="Toggle theme">
+          <span class="theme-text">Dark</span>
           <svg class="icon-sm theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
           <svg class="icon-sm theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </button>
@@ -191,37 +190,37 @@
     <div class="menu-section">
       <button type="button" class="menu-item" id="menu-shortcuts" role="menuitem">
         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>Горячие клавиши (?)</span>
+        <span>Keyboard Shortcuts (?)</span>
       </button>
     </div>
   </div>
 
-  <!-- Виджет зума и навигации (снизу слева) -->
-  <nav class="zoom-widget" aria-label="Масштабирование">
-    <button type="button" class="zoom-btn" id="btn-zoom-out" title="Уменьшить масштаб (Ctrl + -)" aria-label="Уменьшить масштаб">
+  <!-- Zoom and navigation widget (bottom-left) -->
+  <nav class="zoom-widget" aria-label="Zoom and Navigation">
+    <button type="button" class="zoom-btn" id="btn-zoom-out" title="Zoom out (Ctrl + -)" aria-label="Zoom out">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
     
-    <button type="button" class="zoom-value-btn" id="btn-zoom-reset" title="Сбросить масштаб к 100% (Клавиша 0)" aria-label="Сбросить масштаб к 100%">
+    <button type="button" class="zoom-value-btn" id="btn-zoom-reset" title="Reset zoom to 100% (Key 0)" aria-label="Reset zoom to 100%">
       <span id="zoom-percentage">100%</span>
     </button>
 
-    <button type="button" class="zoom-btn" id="btn-zoom-in" title="Увеличить масштаб (Ctrl + +)" aria-label="Увеличить масштаб">
+    <button type="button" class="zoom-btn" id="btn-zoom-in" title="Zoom in (Ctrl + +)" aria-label="Zoom in">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
 
     <div class="zoom-divider"></div>
 
-    <button type="button" class="zoom-btn" id="btn-fit-view" title="Показать весь рисунок (Shift + 1)" aria-label="Центрировать рисунок">
+    <button type="button" class="zoom-btn" id="btn-fit-view" title="Fit content to view (Shift + 1)" aria-label="Fit content to view">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
       </svg>
     </button>
   </nav>
 
-  <!-- Кнопка скрытия интерфейса для чистого рисования (снизу справа) -->
+  <!-- Clean UI toggle button (bottom-right) -->
   <aside class="ui-toggles">
-    <button type="button" class="floating-btn" id="btn-toggle-ui" title="Скрыть/показать интерфейс (F)" aria-label="Скрыть интерфейс">
+    <button type="button" class="floating-btn" id="btn-toggle-ui" title="Toggle UI panels (F)" aria-label="Toggle UI panels">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M15 3h6v6"/>
         <path d="M9 21H3v-6"/>
@@ -231,90 +230,90 @@
     </button>
   </aside>
 
-  <!-- Модальное окно горячих клавиш -->
+  <!-- Keyboard shortcuts modal dialog -->
   <dialog id="modal-shortcuts" class="modal-dialog">
     <div class="modal-card">
       <div class="modal-header">
-        <h2>Горячие клавиши и управление</h2>
-        <button type="button" class="modal-close-btn" id="btn-close-shortcuts" aria-label="Закрыть">
+        <h2>Shortcuts & Controls</h2>
+        <button type="button" class="modal-close-btn" id="btn-close-shortcuts" aria-label="Close">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="modal-body">
         <div class="shortcut-list">
           <div class="shortcut-row">
-            <span class="shortcut-label">Рисование</span>
-            <span class="kbd-combo"><kbd>Левая кнопка мыши</kbd> / <kbd>Сенсор</kbd></span>
+            <span class="shortcut-label">Draw</span>
+            <span class="kbd-combo"><kbd>Left Click</kbd> / <kbd>Touch</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Перемещение (панорамирование)</span>
-            <span class="kbd-combo"><kbd>Пробел</kbd> + потянуть / <kbd>Колесико (клик)</kbd> / 2 пальца</span>
+            <span class="shortcut-label">Pan / Move Canvas</span>
+            <span class="kbd-combo"><kbd>Space</kbd> + Drag / <kbd>Middle Click</kbd> / 2 fingers</span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Масштабирование (Zoom)</span>
-            <span class="kbd-combo"><kbd>Колесо мыши</kbd> / щипок двумя пальцами</span>
+            <span class="shortcut-label">Zoom</span>
+            <span class="kbd-combo"><kbd>Mouse Wheel</kbd> / Pinch to zoom</span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Инструмент Перо</span>
-            <span class="kbd-combo"><kbd>B</kbd> или <kbd>P</kbd></span>
+            <span class="shortcut-label">Pen Tool</span>
+            <span class="kbd-combo"><kbd>B</kbd> or <kbd>P</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Инструмент Маркер</span>
+            <span class="shortcut-label">Marker Tool</span>
             <span class="kbd-combo"><kbd>M</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Инструмент Ластик</span>
+            <span class="shortcut-label">Eraser Tool</span>
             <span class="kbd-combo"><kbd>E</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Инструмент Рука</span>
+            <span class="shortcut-label">Hand (Pan) Tool</span>
             <span class="kbd-combo"><kbd>H</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Отменить действие</span>
+            <span class="shortcut-label">Undo</span>
             <span class="kbd-combo"><kbd>Ctrl</kbd> + <kbd>Z</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Повторить действие</span>
+            <span class="shortcut-label">Redo</span>
             <span class="kbd-combo"><kbd>Ctrl</kbd> + <kbd>Y</kbd> / <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Сбросить масштаб к 100%</span>
+            <span class="shortcut-label">Reset Zoom to 100%</span>
             <span class="kbd-combo"><kbd>0</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Центрировать рисунок</span>
+            <span class="shortcut-label">Fit Drawing to View</span>
             <span class="kbd-combo"><kbd>Shift</kbd> + <kbd>1</kbd></span>
           </div>
           <div class="shortcut-row">
-            <span class="shortcut-label">Скрыть / показать панели</span>
+            <span class="shortcut-label">Toggle UI Panels</span>
             <span class="kbd-combo"><kbd>F</kbd></span>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-primary" id="btn-ack-shortcuts">Понятно</button>
+        <button type="button" class="btn-primary" id="btn-ack-shortcuts">Got It</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Модальное окно подтверждения очистки -->
+  <!-- Clear canvas confirmation dialog -->
   <dialog id="modal-clear-confirm" class="modal-dialog">
     <div class="modal-card">
       <div class="modal-header">
-        <h2>Очистить холст?</h2>
+        <h2>Clear canvas?</h2>
       </div>
       <div class="modal-body">
-        <p>Все штрихи на холсте будут удалены. Вы сможете отменить это действие с помощью <kbd>Ctrl+Z</kbd>.</p>
+        <p>All strokes on the canvas will be removed. You can undo this action with <kbd>Ctrl+Z</kbd>.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-secondary" id="btn-cancel-clear">Отмена</button>
-        <button type="button" class="btn-danger" id="btn-confirm-clear">Очистить всё</button>
+        <button type="button" class="btn-secondary" id="btn-cancel-clear">Cancel</button>
+        <button type="button" class="btn-danger" id="btn-confirm-clear">Clear All</button>
       </div>
     </div>
   </dialog>
 
-  <!-- Всплывающие уведомления (тосты) -->
+  <!-- Toast notifications container -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
   <script src="app.js"></script>

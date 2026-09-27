@@ -404,17 +404,17 @@
     zoomPercentage.textContent = percent + '%';
   }
 
-  // Центрирование рисунка
+  // Center and fit drawing to view
   function fitViewToContent() {
     if (state.strokes.length === 0) {
-      // Сбросить к центру 100%
+      // Reset to center 100%
       state.panX = window.innerWidth / 2;
       state.panY = window.innerHeight / 2;
       state.scale = 1.0;
       updateZoomUI();
       scheduleRedraw();
       debouncedSave();
-      showToast('Холст центрирован');
+      showToast('Canvas centered');
       return;
     }
 
@@ -446,7 +446,7 @@
     updateZoomUI();
     scheduleRedraw();
     debouncedSave();
-    showToast('Вид подогнан под рисунок');
+    showToast('Fitted view to drawing');
   }
 
   // --- Обработка событий мыши, тача и стилуса ---
@@ -812,10 +812,10 @@
     }
   });
 
-  // Очистка холста
+  // Clear canvas
   btnClear.addEventListener('click', () => {
     if (state.strokes.length === 0) {
-      showToast('Холст уже пуст');
+      showToast('Canvas is already empty');
       return;
     }
     modalClearConfirm.showModal();
@@ -836,12 +836,12 @@
       updateHistoryButtons();
       scheduleRedraw();
       debouncedSave();
-      showToast('Холст очищен (можно вернуть через Ctrl+Z)');
+      showToast('Canvas cleared (press Ctrl+Z to undo)');
     }
     modalClearConfirm.close();
   });
 
-  // Сетка
+  // Grid
   gridSelectors.forEach(btn => {
     btn.addEventListener('click', () => {
       gridSelectors.forEach(b => b.classList.remove('active'));
@@ -852,23 +852,22 @@
     });
   });
 
-  // Тема оформления
+  // Color theme
   function setTheme(newTheme) {
     state.theme = newTheme;
     document.body.classList.toggle('theme-dark', newTheme === 'dark');
 
     const themeLabel = document.querySelector('.theme-text');
     if (themeLabel) {
-      themeLabel.textContent = newTheme === 'dark' ? 'Темная' : 'Светлая';
+      themeLabel.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
     }
 
-    // Если выбран стандартный цвет первого кружка (черный/белый), подстраиваем под тему
     const firstSwatch = colorSwatches[0];
     if (firstSwatch) {
       const defaultColor = newTheme === 'dark' ? '#f4f4f5' : '#18181b';
       firstSwatch.dataset.color = defaultColor;
       firstSwatch.style.setProperty('--swatch-color', defaultColor);
-      firstSwatch.title = newTheme === 'dark' ? 'Белый' : 'Черный';
+      firstSwatch.title = newTheme === 'dark' ? 'White' : 'Black';
       firstSwatch.setAttribute('aria-label', firstSwatch.title);
 
       if (state.color === '#f4f4f5' || state.color === '#18181b') {
@@ -884,7 +883,7 @@
     setTheme(state.theme === 'dark' ? 'light' : 'dark');
   });
 
-  // Горячие клавиши модалка
+  // Shortcuts modal
   menuShortcuts.addEventListener('click', () => {
     toggleDropdownMenu(false);
     modalShortcuts.showModal();
@@ -898,19 +897,19 @@
     modalShortcuts.close();
   });
 
-  // Скрытие интерфейса (Zen mode)
+  // Toggle UI visibility (Zen mode)
   function toggleUI() {
     state.uiHidden = !state.uiHidden;
     document.body.classList.toggle('ui-hidden', state.uiHidden);
-    btnToggleUi.title = state.uiHidden ? 'Показать интерфейс (F)' : 'Скрыть интерфейс (F)';
+    btnToggleUi.title = state.uiHidden ? 'Show interface (F)' : 'Hide interface (F)';
     if (state.uiHidden) {
-      showToast('Интерфейс скрыт (нажмите F, чтобы вернуть)');
+      showToast('Interface hidden (press F to show)');
     }
   }
 
   btnToggleUi.addEventListener('click', toggleUI);
 
-  // Кнопки зума
+  // Zoom controls
   btnZoomIn.addEventListener('click', () => setZoom(state.scale * 1.25));
   btnZoomOut.addEventListener('click', () => setZoom(state.scale / 1.25));
   btnZoomReset.addEventListener('click', () => setZoom(1.0));
@@ -919,9 +918,9 @@
   btnUndo.addEventListener('click', undo);
   btnRedo.addEventListener('click', redo);
 
-  // --- Экспорт рисунка ---
+  // --- Export features ---
 
-  // Экспорт в PNG
+  // Export as PNG
   menuExportPng.addEventListener('click', () => {
     toggleDropdownMenu(false);
     exportCanvasToPng();
@@ -929,11 +928,10 @@
 
   function exportCanvasToPng() {
     if (state.strokes.length === 0) {
-      showToast('На холсте пока ничего нет для экспорта');
+      showToast('Canvas is empty, nothing to export');
       return;
     }
 
-    // Вычисляем охватывающий прямоугольник всех штрихов
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const s of state.strokes) {
       if (!s.bbox) continue;
@@ -953,19 +951,14 @@
     offscreen.height = height;
     const offCtx = offscreen.getContext('2d');
 
-    // Фоновая заливка в зависимости от темы
     offCtx.fillStyle = state.theme === 'dark' ? '#121316' : '#ffffff';
     offCtx.fillRect(0, 0, width, height);
-
-    // Смещаем начало координат
     offCtx.translate(-minX + padding, -minY + padding);
 
-    // Рисуем все штрихи
     for (const s of state.strokes) {
       renderStroke(offCtx, s);
     }
 
-    // Скачивание
     offscreen.toBlob((blob) => {
       if (!blob) return;
       const url = URL.createObjectURL(blob);
@@ -974,11 +967,11 @@
       a.download = `canvas_${new Date().toISOString().slice(0, 10)}.png`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('Изображение PNG сохранено');
+      showToast('PNG image saved');
     }, 'image/png');
   }
 
-  // Экспорт в SVG
+  // Export as SVG
   menuExportSvg.addEventListener('click', () => {
     toggleDropdownMenu(false);
     exportCanvasToSvg();
@@ -986,7 +979,7 @@
 
   function exportCanvasToSvg() {
     if (state.strokes.length === 0) {
-      showToast('На холсте пока ничего нет для экспорта');
+      showToast('Canvas is empty, nothing to export');
       return;
     }
 
@@ -1046,10 +1039,10 @@ ${pathsHtml}
     a.download = `canvas_${new Date().toISOString().slice(0, 10)}.svg`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Векторный файл SVG сохранен');
+    showToast('Vector SVG file saved');
   }
 
-  // Экспорт в JSON
+  // Save JSON
   menuSaveJson.addEventListener('click', () => {
     toggleDropdownMenu(false);
     const projectData = {
@@ -1068,10 +1061,10 @@ ${pathsHtml}
     a.download = `canvas_project_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Файл проекта JSON сохранен');
+    showToast('Project JSON file saved');
   });
 
-  // Загрузка JSON
+  // Load JSON
   menuLoadJson.addEventListener('click', () => {
     toggleDropdownMenu(false);
     fileInputJson.click();
@@ -1111,12 +1104,12 @@ ${pathsHtml}
           updateHistoryButtons();
           scheduleRedraw();
           debouncedSave();
-          showToast('Проект успешно загружен');
+          showToast('Project loaded successfully');
         } else {
-          showToast('Некорректный формат файла проекта');
+          showToast('Invalid project file format');
         }
       } catch (err) {
-        showToast('Ошибка при чтении файла');
+        showToast('Error reading file');
       }
     };
     reader.readAsText(file);
