@@ -231,7 +231,7 @@
     ctx.restore();
   }
 
-  // --- Полная перерисовка основного холста ---
+  // --- Full redraw of main canvas ---
   let redrawPending = false;
   function scheduleRedraw() {
     if (redrawPending) return;
@@ -239,6 +239,9 @@
     requestAnimationFrame(() => {
       redrawPending = false;
       redrawMainCanvas();
+      if (state.currentStroke) {
+        redrawActiveCanvas();
+      }
     });
   }
 
@@ -283,10 +286,15 @@
     }
   }
 
-  // --- Отрисовка активного штриха на оверлейном холсте ---
-  function redrawActiveCanvas() {
+  // --- Clear active overlay canvas safely ---
+  function clearActiveCanvas() {
     activeCtx.setTransform(1, 0, 0, 1, 0, 0);
     activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+  }
+
+  // --- Active stroke rendering on overlay canvas ---
+  function redrawActiveCanvas() {
+    clearActiveCanvas();
 
     if (!state.currentStroke) return;
 
@@ -297,6 +305,9 @@
     );
 
     renderStroke(activeCtx, state.currentStroke);
+
+    // Always reset transform back to identity so active canvas operations are never skewed
+    activeCtx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   // --- Расчет ограничивающего прямоугольника штриха ---
@@ -479,11 +490,11 @@
 
     state.lastPointerPos = { x: e.clientX, y: e.clientY };
 
-    // Если 2 пальца — начинаем жест pinch-to-zoom / multi-pan
+    // Multi-touch pinch-to-zoom / multi-pan
     if (state.activePointers.size === 2) {
       if (state.currentStroke) {
         state.currentStroke = null;
-        activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+        clearActiveCanvas();
       }
       initTwoFingerGesture();
       return;
@@ -646,19 +657,20 @@
       state.isInteracting = false;
       container.classList.remove('is-dragging');
 
-      // Фиксация завершенного штриха
+      // Commit completed stroke
       if (state.currentStroke) {
         const strokeToCommit = state.currentStroke;
         state.currentStroke = null;
-        activeCtx.clearRect(0, 0, activeCanvas.width, activeCanvas.height);
+        clearActiveCanvas();
 
         if (strokeToCommit.points.length > 0) {
+          strokeToCommit.bbox = computeBoundingBox(strokeToCommit.points);
           state.strokes.push(strokeToCommit);
           state.history.push({
             type: 'add',
             stroke: strokeToCommit,
           });
-          state.redoStack = []; // Очищаем стек повтора при новом действии
+          state.redoStack = []; // Clear redo stack on new action
           updateHistoryButtons();
           redrawMainCanvas();
           debouncedSave();
@@ -669,6 +681,29 @@
 
   container.addEventListener('pointerup', endPointerInteraction);
   container.addEventListener('pointercancel', endPointerInteraction);
+
+  // Handle window blur / tab switch so no active strokes or gestures get orphaned
+  window.addEventListener('blur', () => {
+    state.activePointers.clear();
+    state.isPanning = false;
+    state.isInteracting = false;
+    state.spacePressed = false;
+    container.classList.remove('is-dragging', 'panning');
+    if (state.currentStroke) {
+      const strokeToCommit = state.currentStroke;
+      state.currentStroke = null;
+      clearActiveCanvas();
+      if (strokeToCommit.points.length > 0) {
+        strokeToCommit.bbox = computeBoundingBox(strokeToCommit.points);
+        state.strokes.push(strokeToCommit);
+        state.history.push({ type: 'add', stroke: strokeToCommit });
+        state.redoStack = [];
+        updateHistoryButtons();
+        redrawMainCanvas();
+        debouncedSave();
+      }
+    }
+  });
 
   // --- Отмена и Повтор (Undo / Redo) ---
   function undo() {
