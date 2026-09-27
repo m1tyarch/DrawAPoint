@@ -272,11 +272,17 @@ button:active:not(:disabled) {
   stroke-width: 2px;
 }
 
-/* Color Swatches */
+/* Color Swatches & Picker */
+.color-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 4px;
+}
+
 .color-palette {
   display: flex;
   align-items: center;
-  gap: 5px;
 }
 
 .color-swatch {
@@ -317,7 +323,7 @@ button:active:not(:disabled) {
   justify-content: center;
   cursor: pointer;
   color: var(--text-muted);
-  transition-property: border-color, color, transform;
+  transition-property: border-color, color, transform, box-shadow;
   transition-duration: var(--transition-fast);
 }
 
@@ -331,6 +337,8 @@ button:active:not(:disabled) {
   border-style: solid;
   border-width: 2px;
   border-color: var(--accent-color);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--surface-dock), 0 0 0 4px var(--accent-color);
 }
 
 #custom-color-input {
@@ -783,8 +791,9 @@ kbd {
     height: 36px;
   }
   
-  .color-palette {
-    gap: 4px;
+  .color-group {
+    gap: 14px;
+    padding: 0 4px;
   }
   
   .color-swatch {
