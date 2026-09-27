@@ -1,4 +1,4 @@
-# 🎨 Infinite Canvas
+# 🎨 DrawAPoint
 
 A minimalist, fast, and responsive infinite canvas drawing application for the browser. Built with pure HTML5, CSS3, and JavaScript — zero external dependencies, no build steps required, and ready to deploy on **GitHub Pages**.
 
@@ -47,3 +47,5 @@ A minimalist, fast, and responsive infinite canvas drawing application for the b
 ## 🚀 Deployment
 
 The project is configured with GitHub Actions workflow at `.github/workflows/deploy.yml` for automated deployment to GitHub Pages on every push to `main`.
+
+Live site: [https://m1tyarch.github.io/DrawAPoint/](https://m1tyarch.github.io/DrawAPoint/)

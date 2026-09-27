@@ -1,13 +1,14 @@
 /**
- * Бесконечный Холст — Основная логика приложения
- * Infinite Canvas Web Application
+ * DrawAPoint — Main Application Logic
+ * Draw A Point — Infinite Canvas Web Application
  */
 
 (function () {
   'use strict';
 
-  // --- Конфигурация и константы ---
-  const STORAGE_KEY = 'infinite_canvas_state_v1';
+  // --- Configuration and Constants ---
+  const STORAGE_KEY = 'drawapoint_state_v1';
+  const LEGACY_STORAGE_KEY = 'infinite_canvas_state_v1';
   const MIN_SCALE = 0.05; // 5%
   const MAX_SCALE = 20.0; // 2000%
   const BASE_GRID_STEP = 36;
@@ -964,7 +965,7 @@
 
   function loadStateFromStorage() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
 
