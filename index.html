@@ -15,6 +15,33 @@
   <div id="canvas-container" class="canvas-container">
     <canvas id="main-canvas"></canvas>
     <canvas id="active-canvas"></canvas>
+
+    <!-- Selection overlay for pasted images / screenshots -->
+    <div id="image-selection-box" class="image-selection-box hidden">
+      <div class="selection-drag-area" title="Drag to move image"></div>
+      <div class="resize-handle handle-nw" data-handle="nw" title="Resize"></div>
+      <div class="resize-handle handle-ne" data-handle="ne" title="Resize"></div>
+      <div class="resize-handle handle-se" data-handle="se" title="Resize"></div>
+      <div class="resize-handle handle-sw" data-handle="sw" title="Resize"></div>
+      <div class="selection-actions" id="selection-actions">
+        <span class="selection-dim-pill" id="selection-dim-pill"></span>
+        <button type="button" class="selection-action-btn" id="btn-image-reset-size" title="Original size (1:1)" aria-label="Original size">
+          1:1
+        </button>
+        <button type="button" class="selection-action-btn btn-danger" id="btn-image-delete" title="Delete image (Delete / Backspace)" aria-label="Delete image">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+        </button>
+        <button type="button" class="selection-action-btn btn-confirm" id="btn-image-done" title="Done (Escape or click canvas)" aria-label="Done">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Floating top toolbar -->
@@ -228,6 +255,10 @@
           <div class="shortcut-row">
             <span class="shortcut-label">Hand (Pan) Tool</span>
             <span class="kbd-combo"><kbd>H</kbd></span>
+          </div>
+          <div class="shortcut-row">
+            <span class="shortcut-label">Paste Screenshot / Image</span>
+            <span class="kbd-combo"><kbd>Ctrl</kbd> + <kbd>V</kbd></span>
           </div>
           <div class="shortcut-row">
             <span class="shortcut-label">Undo</span>

@@ -29,6 +29,8 @@
 
     // Данные рисунка
     strokes: [], // массив объектов Stroke
+    images: [], // массив объектов Image (вставленные скриншоты)
+    selectedImage: null, // текущее выделенное изображение
     history: [], // стек отмены
     redoStack: [], // стек повтора
 
@@ -84,6 +86,12 @@
   const btnCancelClear = document.getElementById('btn-cancel-clear');
   const btnConfirmClear = document.getElementById('btn-confirm-clear');
   const toastContainer = document.getElementById('toast-container');
+  const imageSelectionBox = document.getElementById('image-selection-box');
+  const selectionActions = document.getElementById('selection-actions');
+  const selectionDimPill = document.getElementById('selection-dim-pill');
+  const btnImageResetSize = document.getElementById('btn-image-reset-size');
+  const btnImageDelete = document.getElementById('btn-image-delete');
+  const btnImageDone = document.getElementById('btn-image-done');
 
   // --- Преобразование координат ---
 
@@ -260,6 +268,28 @@
     const viewRight = (w - state.panX) / state.scale;
     const viewBottom = (h - state.panY) / state.scale;
 
+    // Высокое качество масштабирования изображений
+    mainCtx.imageSmoothingEnabled = true;
+    mainCtx.imageSmoothingQuality = 'high';
+
+    // Отрисовка всех сохраненных изображений (скриншотов)
+    for (let i = 0; i < state.images.length; i++) {
+      const img = state.images[i];
+      if (img.bbox) {
+        if (
+          img.bbox.maxX < viewLeft ||
+          img.bbox.minX > viewRight ||
+          img.bbox.maxY < viewTop ||
+          img.bbox.minY > viewBottom
+        ) {
+          continue; // Вне зоны видимости
+        }
+      }
+      if (img.element && img.element.complete && img.element.naturalWidth > 0) {
+        mainCtx.drawImage(img.element, img.x, img.y, img.width, img.height);
+      }
+    }
+
     // Отрисовка всех сохраненных штрихов
     for (let i = 0; i < state.strokes.length; i++) {
       const s = state.strokes[i];
@@ -276,6 +306,9 @@
       }
       renderStroke(mainCtx, s);
     }
+
+    // Обновляем позицию рамки выделения изображения
+    updateSelectionBox();
   }
 
   // --- Clear active overlay canvas safely ---
@@ -381,8 +414,408 @@
       updateHistoryButtons();
       scheduleRedraw();
       debouncedSave();
+    } else if (state.images.length > 0) {
+      const hitImage = findImageAt(worldPoint.x, worldPoint.y);
+      if (hitImage) {
+        showToast('To delete an image, select it with Hand tool (H) and press Delete');
+      }
     }
   }
+
+  // --- Управление изображениями (Скриншоты из буфера обмена) ---
+
+  let currentMouseScreen = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  let mouseHasMoved = false;
+
+  window.addEventListener('pointermove', (e) => {
+    currentMouseScreen = { x: e.clientX, y: e.clientY };
+    mouseHasMoved = true;
+  }, { passive: true });
+
+  function findImageAt(wx, wy) {
+    for (let i = state.images.length - 1; i >= 0; i--) {
+      const img = state.images[i];
+      if (wx >= img.x && wx <= img.x + img.width && wy >= img.y && wy <= img.y + img.height) {
+        return img;
+      }
+    }
+    return null;
+  }
+
+  function selectImage(img) {
+    state.selectedImage = img;
+    updateSelectionBox();
+  }
+
+  function deselectImage() {
+    if (!state.selectedImage) return;
+    state.selectedImage = null;
+    updateSelectionBox();
+  }
+
+  function deleteSelectedImage() {
+    if (!state.selectedImage) return;
+    const img = state.selectedImage;
+    const index = state.images.indexOf(img);
+    if (index !== -1) {
+      state.images.splice(index, 1);
+      state.history.push({
+        type: 'remove_image',
+        image: img,
+        index: index,
+      });
+      state.redoStack = [];
+      updateHistoryButtons();
+    }
+    state.selectedImage = null;
+    updateSelectionBox();
+    scheduleRedraw();
+    debouncedSave();
+    showToast('Image deleted (Ctrl+Z to undo)');
+  }
+
+  function resetSelectedImageSize() {
+    if (!state.selectedImage) return;
+    const img = state.selectedImage;
+    const oldBounds = { x: img.x, y: img.y, width: img.width, height: img.height };
+    img.width = img.naturalWidth || img.width;
+    img.height = img.naturalHeight || img.height;
+    img.bbox = { minX: img.x, minY: img.y, maxX: img.x + img.width, maxY: img.y + img.height };
+
+    state.history.push({
+      type: 'transform_image',
+      image: img,
+      oldBounds,
+      newBounds: { x: img.x, y: img.y, width: img.width, height: img.height },
+    });
+    state.redoStack = [];
+    updateHistoryButtons();
+
+    updateSelectionBox();
+    scheduleRedraw();
+    debouncedSave();
+  }
+
+  function updateSelectionBox() {
+    if (!imageSelectionBox) return;
+    if (!state.selectedImage) {
+      imageSelectionBox.classList.add('hidden');
+      return;
+    }
+
+    const img = state.selectedImage;
+    const screenPos = worldToScreen(img.x, img.y);
+    const screenW = img.width * state.scale;
+    const screenH = img.height * state.scale;
+
+    imageSelectionBox.classList.remove('hidden');
+    imageSelectionBox.style.left = `${Math.round(screenPos.x)}px`;
+    imageSelectionBox.style.top = `${Math.round(screenPos.y)}px`;
+    imageSelectionBox.style.width = `${Math.round(screenW)}px`;
+    imageSelectionBox.style.height = `${Math.round(screenH)}px`;
+
+    if (selectionDimPill) {
+      selectionDimPill.textContent = `${Math.round(img.width)} × ${Math.round(img.height)}`;
+    }
+
+    if (selectionActions) {
+      if (screenPos.y < 50) {
+        selectionActions.style.bottom = 'auto';
+        selectionActions.style.top = 'calc(100% + 10px)';
+      } else {
+        selectionActions.style.top = 'auto';
+        selectionActions.style.bottom = 'calc(100% + 10px)';
+      }
+    }
+  }
+
+  let activeImageInteraction = null;
+
+  function onImagePointerMove(e) {
+    if (!activeImageInteraction || !state.selectedImage) return;
+    const img = state.selectedImage;
+    const dx = (e.clientX - activeImageInteraction.startX) / state.scale;
+    const dy = (e.clientY - activeImageInteraction.startY) / state.scale;
+
+    if (activeImageInteraction.type === 'drag') {
+      img.x = Math.round(activeImageInteraction.origX + dx);
+      img.y = Math.round(activeImageInteraction.origY + dy);
+      img.bbox = { minX: img.x, minY: img.y, maxX: img.x + img.width, maxY: img.y + img.height };
+    } else if (activeImageInteraction.type === 'resize') {
+      const { origX, origY, origW, origH, aspect, handle } = activeImageInteraction;
+
+      if (handle === 'se') {
+        const newW = Math.max(40, Math.round(origW + dx));
+        const newH = Math.round(newW / aspect);
+        img.width = newW;
+        img.height = newH;
+      } else if (handle === 'sw') {
+        const newW = Math.max(40, Math.round(origW - dx));
+        const newH = Math.round(newW / aspect);
+        img.x = Math.round(origX + (origW - newW));
+        img.width = newW;
+        img.height = newH;
+      } else if (handle === 'ne') {
+        const newW = Math.max(40, Math.round(origW + dx));
+        const newH = Math.round(newW / aspect);
+        img.y = Math.round(origY + (origH - newH));
+        img.width = newW;
+        img.height = newH;
+      } else if (handle === 'nw') {
+        const newW = Math.max(40, Math.round(origW - dx));
+        const newH = Math.round(newW / aspect);
+        img.x = Math.round(origX + (origW - newW));
+        img.y = Math.round(origY + (origH - newH));
+        img.width = newW;
+        img.height = newH;
+      }
+      img.bbox = { minX: img.x, minY: img.y, maxX: img.x + img.width, maxY: img.y + img.height };
+    }
+
+    scheduleRedraw();
+    updateSelectionBox();
+  }
+
+  function onImagePointerUp() {
+    window.removeEventListener('pointermove', onImagePointerMove);
+    window.removeEventListener('pointerup', onImagePointerUp);
+
+    if (!activeImageInteraction || !state.selectedImage) {
+      activeImageInteraction = null;
+      return;
+    }
+
+    const img = state.selectedImage;
+    const { origX, origY, origW, origH } = activeImageInteraction;
+    if (img.x !== origX || img.y !== origY || img.width !== origW || img.height !== origH) {
+      state.history.push({
+        type: 'transform_image',
+        image: img,
+        oldBounds: { x: origX, y: origY, width: origW, height: origH },
+        newBounds: { x: img.x, y: img.y, width: img.width, height: img.height },
+      });
+      state.redoStack = [];
+      updateHistoryButtons();
+      debouncedSave();
+    }
+
+    activeImageInteraction = null;
+  }
+
+  if (imageSelectionBox) {
+    imageSelectionBox.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.selection-actions')) return;
+
+      e.stopPropagation();
+      e.preventDefault();
+
+      if (!state.selectedImage) return;
+      const img = state.selectedImage;
+
+      if (e.target.classList.contains('resize-handle')) {
+        const handle = e.target.dataset.handle;
+        activeImageInteraction = {
+          type: 'resize',
+          handle,
+          startX: e.clientX,
+          startY: e.clientY,
+          origX: img.x,
+          origY: img.y,
+          origW: img.width,
+          origH: img.height,
+          aspect: img.naturalWidth / img.naturalHeight || (img.width / img.height),
+        };
+        window.addEventListener('pointermove', onImagePointerMove);
+        window.addEventListener('pointerup', onImagePointerUp);
+      } else if (e.target.classList.contains('selection-drag-area')) {
+        activeImageInteraction = {
+          type: 'drag',
+          startX: e.clientX,
+          startY: e.clientY,
+          origX: img.x,
+          origY: img.y,
+          origW: img.width,
+          origH: img.height,
+        };
+        window.addEventListener('pointermove', onImagePointerMove);
+        window.addEventListener('pointerup', onImagePointerUp);
+      }
+    });
+
+    if (btnImageResetSize) {
+      btnImageResetSize.addEventListener('click', (e) => {
+        e.stopPropagation();
+        resetSelectedImageSize();
+      });
+    }
+
+    if (btnImageDelete) {
+      btnImageDelete.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteSelectedImage();
+      });
+    }
+
+    if (btnImageDone) {
+      btnImageDone.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deselectImage();
+      });
+    }
+  }
+
+  function processImageBlob(blob, callback) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      const tempImg = new Image();
+      tempImg.onload = () => {
+        const maxDim = 2560; // 2.5K limit for storage sanity
+        let width = tempImg.naturalWidth;
+        let height = tempImg.naturalHeight;
+
+        // If reasonable size and dataUrl length < 1.5MB, keep original
+        if (width <= maxDim && height <= maxDim && dataUrl.length < 1500000) {
+          callback(tempImg, dataUrl);
+          return;
+        }
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = width;
+        offCanvas.height = height;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(tempImg, 0, 0, width, height);
+
+        let optUrl = offCanvas.toDataURL('image/webp', 0.92);
+        if (!optUrl.startsWith('data:image/webp')) {
+          optUrl = offCanvas.toDataURL('image/jpeg', 0.9);
+        }
+
+        const optImg = new Image();
+        optImg.onload = () => {
+          callback(optImg, optUrl);
+        };
+        optImg.src = optUrl;
+      };
+      tempImg.src = dataUrl;
+    };
+    reader.readAsDataURL(blob);
+  }
+
+  function pasteImageFile(file, customScreenPos) {
+    showToast('Pasting image...');
+    processImageBlob(file, (imgElement, dataUrl) => {
+      const screenPos = customScreenPos || (mouseHasMoved ? currentMouseScreen : { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      const worldCenter = screenToWorld(screenPos.x, screenPos.y);
+
+      // Max comfortable viewport fit (75% of current view)
+      const viewportWorldW = (window.innerWidth / state.scale) * 0.75;
+      const viewportWorldH = (window.innerHeight / state.scale) * 0.75;
+
+      let w = imgElement.naturalWidth;
+      let h = imgElement.naturalHeight;
+
+      if (w > viewportWorldW || h > viewportWorldH) {
+        const fitScale = Math.min(viewportWorldW / w, viewportWorldH / h, 1);
+        w = Math.max(40, Math.round(w * fitScale));
+        h = Math.max(40, Math.round(h * fitScale));
+      }
+
+      const x = Math.round(worldCenter.x - w / 2);
+      const y = Math.round(worldCenter.y - h / 2);
+
+      const imageObj = {
+        id: 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        type: 'image',
+        x,
+        y,
+        width: w,
+        height: h,
+        naturalWidth: imgElement.naturalWidth,
+        naturalHeight: imgElement.naturalHeight,
+        src: dataUrl,
+        element: imgElement,
+        bbox: { minX: x, minY: y, maxX: x + w, maxY: y + h },
+      };
+
+      state.images.push(imageObj);
+      state.history.push({
+        type: 'add_image',
+        image: imageObj,
+      });
+      state.redoStack = [];
+      updateHistoryButtons();
+
+      selectImage(imageObj);
+      scheduleRedraw();
+      debouncedSave();
+      showToast('Screenshot pasted! Drag to move, corners to resize.');
+    });
+  }
+
+  // Global paste handler
+  window.addEventListener('paste', (e) => {
+    // If focused on an input/textarea and not pasting an image file, don't intercept
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      const hasImage = e.clipboardData?.files?.[0]?.type.startsWith('image/') ||
+        Array.from(e.clipboardData?.items || []).some(item => item.type.startsWith('image/'));
+      if (!hasImage) return;
+    }
+
+    const items = e.clipboardData ? e.clipboardData.items : null;
+    if (!items || items.length === 0) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          pasteImageFile(file);
+          return;
+        }
+      }
+    }
+  });
+
+  // Drag & drop image files onto canvas
+  window.addEventListener('dragover', (e) => {
+    if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      container.classList.add('drag-over');
+    }
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+      container.classList.remove('drag-over');
+    }
+  });
+
+  window.addEventListener('drop', (e) => {
+    container.classList.remove('drag-over');
+    if (!e.dataTransfer || !e.dataTransfer.files) return;
+
+    for (let i = 0; i < e.dataTransfer.files.length; i++) {
+      const file = e.dataTransfer.files[i];
+      if (file.type.startsWith('image/')) {
+        e.preventDefault();
+        pasteImageFile(file, { x: e.clientX, y: e.clientY });
+        break;
+      }
+    }
+  });
 
   // --- Управление масштабом (Zoom) ---
   function setZoom(newScale, centerScreenX, centerScreenY) {
@@ -536,7 +969,7 @@
 
   // Center and fit drawing to view
   function fitViewToContent() {
-    if (state.strokes.length === 0) {
+    if (state.strokes.length === 0 && state.images.length === 0) {
       // Reset to center 100%
       state.panX = window.innerWidth / 2;
       state.panY = window.innerHeight / 2;
@@ -555,6 +988,13 @@
       if (s.bbox.minY < minY) minY = s.bbox.minY;
       if (s.bbox.maxX > maxX) maxX = s.bbox.maxX;
       if (s.bbox.maxY > maxY) maxY = s.bbox.maxY;
+    }
+    for (const img of state.images) {
+      if (!img.bbox) continue;
+      if (img.bbox.minX < minX) minX = img.bbox.minX;
+      if (img.bbox.minY < minY) minY = img.bbox.minY;
+      if (img.bbox.maxX > maxX) maxX = img.bbox.maxX;
+      if (img.bbox.maxY > maxY) maxY = img.bbox.maxY;
     }
 
     const padding = 60;
@@ -621,6 +1061,11 @@
 
     if (state.activePointers.size > 2) return;
 
+    // Снимаем выделение изображения при клике на свободный холст
+    if (state.selectedImage) {
+      deselectImage();
+    }
+
     // Панорамирование средней кнопкой, зажатым пробелом или инструментом 'hand'
     const isPanTrigger =
       e.button === 1 ||
@@ -628,6 +1073,16 @@
       state.activeTool === 'hand';
 
     if (isPanTrigger) {
+      // При клике левой кнопкой мыши инструментом 'hand' по изображению — выделяем его
+      if (state.activeTool === 'hand' && e.button === 0 && !state.spacePressed) {
+        const worldPos = screenToWorld(e.clientX, e.clientY);
+        const clickedImg = findImageAt(worldPos.x, worldPos.y);
+        if (clickedImg) {
+          selectImage(clickedImg);
+          return;
+        }
+      }
+
       state.isPanning = true;
       container.classList.add('is-dragging');
       return;
@@ -657,6 +1112,15 @@
     };
 
     redrawActiveCanvas();
+  });
+
+  // Двойной клик по изображению любым инструментом выделяет его для перемещения/масштабирования
+  container.addEventListener('dblclick', (e) => {
+    const worldPos = screenToWorld(e.clientX, e.clientY);
+    const clickedImg = findImageAt(worldPos.x, worldPos.y);
+    if (clickedImg) {
+      selectImage(clickedImg);
+    }
   });
 
   function initTwoFingerGesture() {
@@ -842,8 +1306,34 @@
       for (const item of sorted) {
         state.strokes.splice(item.index, 0, item.stroke);
       }
+    } else if (action.type === 'add_image') {
+      const idx = state.images.indexOf(action.image);
+      if (idx !== -1) {
+        state.images.splice(idx, 1);
+      }
+      if (state.selectedImage === action.image) {
+        deselectImage();
+      }
+    } else if (action.type === 'remove_image') {
+      state.images.splice(action.index !== undefined ? action.index : state.images.length, 0, action.image);
+      selectImage(action.image);
+    } else if (action.type === 'transform_image') {
+      action.image.x = action.oldBounds.x;
+      action.image.y = action.oldBounds.y;
+      action.image.width = action.oldBounds.width;
+      action.image.height = action.oldBounds.height;
+      action.image.bbox = {
+        minX: action.image.x,
+        minY: action.image.y,
+        maxX: action.image.x + action.image.width,
+        maxY: action.image.y + action.image.height,
+      };
+      if (state.selectedImage === action.image) {
+        updateSelectionBox();
+      }
     } else if (action.type === 'clear') {
       state.strokes = action.strokes.slice();
+      state.images = action.images ? action.images.slice() : [];
     }
 
     updateHistoryButtons();
@@ -862,8 +1352,35 @@
     } else if (action.type === 'remove') {
       const idsToRemove = new Set(action.items.map(i => i.stroke.id));
       state.strokes = state.strokes.filter(s => !idsToRemove.has(s.id));
+    } else if (action.type === 'add_image') {
+      state.images.push(action.image);
+      selectImage(action.image);
+    } else if (action.type === 'remove_image') {
+      const idx = state.images.indexOf(action.image);
+      if (idx !== -1) {
+        state.images.splice(idx, 1);
+      }
+      if (state.selectedImage === action.image) {
+        deselectImage();
+      }
+    } else if (action.type === 'transform_image') {
+      action.image.x = action.newBounds.x;
+      action.image.y = action.newBounds.y;
+      action.image.width = action.newBounds.width;
+      action.image.height = action.newBounds.height;
+      action.image.bbox = {
+        minX: action.image.x,
+        minY: action.image.y,
+        maxX: action.image.x + action.image.width,
+        maxY: action.image.y + action.image.height,
+      };
+      if (state.selectedImage === action.image) {
+        updateSelectionBox();
+      }
     } else if (action.type === 'clear') {
       state.strokes = [];
+      state.images = [];
+      deselectImage();
     }
 
     updateHistoryButtons();
@@ -968,7 +1485,7 @@
 
   // Clear canvas
   btnClear.addEventListener('click', () => {
-    if (state.strokes.length === 0) {
+    if (state.strokes.length === 0 && state.images.length === 0) {
       showToast('Canvas is already empty');
       return;
     }
@@ -980,13 +1497,16 @@
   });
 
   btnConfirmClear.addEventListener('click', () => {
-    if (state.strokes.length > 0) {
+    if (state.strokes.length > 0 || state.images.length > 0) {
       state.history.push({
         type: 'clear',
         strokes: state.strokes.slice(),
+        images: state.images.slice(),
       });
       state.redoStack = [];
       state.strokes = [];
+      state.images = [];
+      deselectImage();
       updateHistoryButtons();
       scheduleRedraw();
       debouncedSave();
@@ -1077,6 +1597,17 @@
 
   function saveStateToStorage() {
     try {
+      const serializedImages = state.images.map(img => ({
+        id: img.id,
+        x: img.x,
+        y: img.y,
+        width: img.width,
+        height: img.height,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+        src: img.src,
+      }));
+
       const data = {
         theme: state.theme,
         gridType: state.gridType,
@@ -1084,10 +1615,11 @@
         size: state.size,
         camera: { panX: state.panX, panY: state.panY, scale: state.scale },
         strokes: state.strokes,
+        images: serializedImages,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-      // Квота хранилища превышена при огромном количестве штрихов
+      // Квота хранилища превышена при огромном количестве данных
     }
   }
 
@@ -1110,6 +1642,37 @@
         state.panY = data.camera.panY || window.innerHeight / 2;
         state.scale = Math.min(Math.max(data.camera.scale || 1.0, MIN_SCALE), MAX_SCALE);
         updateZoomUI();
+      }
+
+      if (Array.isArray(data.images) && data.images.length > 0) {
+        state.images = [];
+        data.images.forEach(imgData => {
+          if (!imgData.src) return;
+          const img = new Image();
+          const imgObj = {
+            id: imgData.id || ('img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6)),
+            type: 'image',
+            x: imgData.x || 0,
+            y: imgData.y || 0,
+            width: imgData.width || 100,
+            height: imgData.height || 100,
+            naturalWidth: imgData.naturalWidth || imgData.width || 100,
+            naturalHeight: imgData.naturalHeight || imgData.height || 100,
+            src: imgData.src,
+            element: img,
+            bbox: {
+              minX: imgData.x || 0,
+              minY: imgData.y || 0,
+              maxX: (imgData.x || 0) + (imgData.width || 100),
+              maxY: (imgData.y || 0) + (imgData.height || 100),
+            },
+          };
+          img.onload = () => {
+            scheduleRedraw();
+          };
+          img.src = imgData.src;
+          state.images.push(imgObj);
+        });
       }
 
       if (Array.isArray(data.strokes) && data.strokes.length > 0) {
@@ -1152,11 +1715,22 @@
     // Не перехватываем ввод в текстовых полях
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-    // Закрытие модалок по Escape
+    // Закрытие модалок и снятие выделения по Escape
     if (e.key === 'Escape') {
+      if (state.selectedImage) {
+        deselectImage();
+        return;
+      }
       if (modalShortcuts.open) modalShortcuts.close();
       if (modalClearConfirm.open) modalClearConfirm.close();
       toggleDropdownMenu(false);
+      return;
+    }
+
+    // Удаление выбранного изображения
+    if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedImage) {
+      e.preventDefault();
+      deleteSelectedImage();
       return;
     }
 
