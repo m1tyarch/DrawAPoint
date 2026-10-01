@@ -603,10 +603,15 @@
   }
 
   if (imageSelectionBox) {
+    // Предотвращаем всплытие любых событий мыши/тача к холсту
     imageSelectionBox.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('.selection-actions')) return;
-
       e.stopPropagation();
+
+      // Если клик по кнопкам панели действий — не блокируем default клик
+      if (e.target.closest('.selection-actions')) {
+        return;
+      }
+
       e.preventDefault();
 
       if (!state.selectedImage) return;
@@ -642,23 +647,47 @@
       }
     });
 
+    if (selectionActions) {
+      selectionActions.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
+      selectionActions.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+      });
+      selectionActions.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
+
     if (btnImageResetSize) {
+      btnImageResetSize.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
       btnImageResetSize.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         resetSelectedImageSize();
       });
     }
 
     if (btnImageDelete) {
+      btnImageDelete.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
       btnImageDelete.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         deleteSelectedImage();
       });
     }
 
     if (btnImageDone) {
+      btnImageDone.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+      });
       btnImageDone.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         deselectImage();
       });
     }
@@ -1038,6 +1067,7 @@
 
   container.addEventListener('pointerdown', (e) => {
     if (e.button === 2) return; // Правая кнопка мыши игнорируется
+    if (e.target.closest('#image-selection-box')) return; // Клики по рамке и кнопкам изображения обрабатываются отдельно
 
     container.setPointerCapture(e.pointerId);
     state.activePointers.set(e.pointerId, {

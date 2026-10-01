@@ -283,11 +283,24 @@ body {
   font-family: var(--font-mono);
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  border: none;
+  outline: none;
+  pointer-events: auto;
+  user-select: none;
+  touch-action: manipulation;
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .selection-action-btn:hover {
   background-color: var(--surface-hover);
+}
+
+.selection-action-btn:active {
+  transform: scale(0.92);
+}
+
+.selection-action-btn svg {
+  pointer-events: none;
 }
 
 .selection-action-btn.btn-danger:hover {
